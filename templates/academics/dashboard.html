@@ -26,10 +26,12 @@
     <div class="row mb-4">
         <!-- Current GPA -->
         <div class="col-md-3 mb-3">
-            <div class="card stat-card">
-                <div class="stat-value">{{ gpa }}</div>
-                <div class="stat-label">Current GPA</div>
-                <small class="text-muted">Weighted Mean Average</small>
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="stat-value">{{ gpa|default:"0.00" }}</div>
+                    <div class="stat-label">Current GPA</div>
+                    <small class="text-muted">Weighted Mean Average</small>
+                </div>
             </div>
         </div>
 
@@ -38,7 +40,7 @@
             <div class="card">
                 <div class="card-body">
                     <div class="stat-label mb-2">Honors Level</div>
-                    <span class="badge badge-success" style="font-size: 0.9rem; padding: 8px 12px;">
+                    <span class="badge bg-success" style="font-size: 0.9rem; padding: 8px 12px;">
                         {{ honors }}
                     </span>
                 </div>
@@ -47,19 +49,23 @@
 
         <!-- Units Completed -->
         <div class="col-md-3 mb-3">
-            <div class="card stat-card">
-                <div class="stat-value">{{ units_completed }}</div>
-                <div class="stat-label">Units Completed</div>
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="stat-value">{{ units_completed|default:0 }}</div>
+                    <div class="stat-label">Units Completed</div>
+                </div>
             </div>
         </div>
 
         <!-- Failed Units -->
         <div class="col-md-3 mb-3">
-            <div class="card stat-card">
-                <div class="stat-value" style="color: {% if failed_units > 0 %}#dc3545{% else %}#28a745{% endif %};">
-                    {{ failed_units }}
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="stat-value" style="color: {% if failed_units > 0 %}#dc3545{% else %}#28a745{% endif %};">
+                        {{ failed_units|default:0 }}
+                    </div>
+                    <div class="stat-label">Failed Units</div>
                 </div>
-                <div class="stat-label">Failed Units</div>
             </div>
         </div>
     </div>
@@ -146,41 +152,45 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-    // Grade Distribution Chart
-    const gradeData = {
-        'A': {{ grade_distribution.A }},
-        'B': {{ grade_distribution.B }},
-        'C': {{ grade_distribution.C }},
-        'D': {{ grade_distribution.D }},
-        'E': {{ grade_distribution.E }}
-    };
+    // Grade Distribution Chart - Only render if canvas exists
+    const chartCanvas = document.getElementById('gradeChart');
+    
+    if (chartCanvas) {
+        const gradeData = {
+            'A': {{ grade_distribution.A }},
+            'B': {{ grade_distribution.B }},
+            'C': {{ grade_distribution.C }},
+            'D': {{ grade_distribution.D }},
+            'E': {{ grade_distribution.E }}
+        };
 
-    const ctx = document.getElementById('gradeChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['A', 'B', 'C', 'D', 'E'],
-            datasets: [{
-                data: Object.values(gradeData),
-                backgroundColor: [
-                    '#28a745',
-                    '#007bff',
-                    '#ffc107',
-                    '#fd7e14',
-                    '#dc3545'
-                ],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    position: 'bottom'
+        const ctx = chartCanvas.getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['A', 'B', 'C', 'D', 'E'],
+                datasets: [{
+                    data: Object.values(gradeData),
+                    backgroundColor: [
+                        '#28a745',
+                        '#007bff',
+                        '#ffc107',
+                        '#fd7e14',
+                        '#dc3545'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
                 }
             }
-        }
-    });
+        });
+    }
 </script>
 {% endblock %}

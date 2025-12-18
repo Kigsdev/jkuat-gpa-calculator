@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}JKUAT GPA Calculator{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --jkuat-green: #4CAF50;
+            --jkuat-grey: #f4f6f9;
+            --jkuat-dark: #2c3e50;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--jkuat-grey);
+            color: var(--jkuat-dark);
+        }
+        
+        .navbar {
+            background-color: var(--jkuat-green);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
+        
+        .nav-link:hover {
+            color: white !important;
+            transition: color 0.3s ease;
+        }
+        
+        .sidebar {
+            background-color: white;
+            border-right: 1px solid #e0e0e0;
+            padding: 20px 0;
+        }
+        
+        .sidebar .nav-link {
+            color: var(--jkuat-dark);
+            padding: 10px 20px;
+            border-left: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background-color: var(--jkuat-grey);
+            border-left-color: var(--jkuat-green);
+            color: var(--jkuat-green);
+        }
+        
+        .card {
+            border: none;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-radius: 8px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+        }
+        
+        .stat-card {
+            padding: 30px;
+            border-left: 4px solid var(--jkuat-green);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--jkuat-green);
+        }
+        
+        .stat-label {
+            color: #999;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .btn-primary {
+            background-color: var(--jkuat-green);
+            border-color: var(--jkuat-green);
+        }
+        
+        .btn-primary:hover {
+            background-color: #45a049;
+            border-color: #45a049;
+        }
+        
+        .badge-success {
+            background-color: var(--jkuat-green);
+        }
+        
+        .footer {
+            background-color: var(--jkuat-dark);
+            color: white;
+            padding: 30px 0;
+            margin-top: 50px;
+            text-align: center;
+        }
+        
+        .grade-badge {
+            font-size: 1.2rem;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .grade-a { background-color: #28a745; color: white; }
+        .grade-b { background-color: #007bff; color: white; }
+        .grade-c { background-color: #ffc107; color: black; }
+        .grade-d { background-color: #fd7e14; color: white; }
+        .grade-e { background-color: #dc3545; color: white; }
+        
+        .table-hover tbody tr:hover {
+            background-color: var(--jkuat-grey);
+        }
+        
+        .breadcrumb {
+            background-color: transparent;
+            padding: 0;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'index' %}">
+                <i class="fas fa-graduation-cap"></i> JKUAT GPA
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'academics:dashboard' %}">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'academics:transcript' %}">Transcript</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle"></i> {{ user.first_name }}
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="userMenu">
+                                <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">Profile</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">Logout</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'accounts:login' %}">Login</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid">
+        <div class="row">
+            {% if user.is_authenticated %}
+            <!-- Sidebar -->
+            <div class="col-md-2 d-none d-md-block sidebar">
+                <nav class="nav flex-column">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'academics:dashboard' %}">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'transcript' %}active{% endif %}" href="{% url 'academics:transcript' %}">
+                        <i class="fas fa-scroll"></i> Transcript
+                    </a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'units' %}active{% endif %}" href="{% url 'academics:units' %}">
+                        <i class="fas fa-book"></i> Units
+                    </a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'projection' %}active{% endif %}" href="{% url 'academics:projection' %}">
+                        <i class="fas fa-calculator"></i> Projection
+                    </a>
+                    <hr>
+                    <a class="nav-link" href="{% url 'accounts:logout' %}">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Content Area -->
+            <div class="col-md-10 col-12">
+            {% else %}
+            <div class="col-12">
+            {% endif %}
+                <main role="main" style="min-height: calc(100vh - 150px);">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    {% block content %}{% endblock %}
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 JKUAT GPA Calculator. All rights reserved.</p>
+            <p><small>Group 1: Roy, John Njogu, Vivian, Apphie, John Kigotho</small></p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

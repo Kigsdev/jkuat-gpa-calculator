@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - JKUAT GPA Calculator{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    {% if student %}
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Welcome, {{ user.first_name }}!</h1>
+            <p class="text-muted">
+                <small>
+                    {{ student.registration_number }} • 
+                    {{ student.course }} • 
+                    {{ student.get_year_of_study_display }}
+                </small>
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <p class="text-muted"><i class="fas fa-calendar"></i> Academic Year: {{ student.academic_year }}</p>
+        </div>
+    </div>
+
+    <!-- Main Stats -->
+    <div class="row mb-4">
+        <!-- Current GPA -->
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card">
+                <div class="stat-value">{{ gpa }}</div>
+                <div class="stat-label">Current GPA</div>
+                <small class="text-muted">Weighted Mean Average</small>
+            </div>
+        </div>
+
+        <!-- Honors Level -->
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="stat-label mb-2">Honors Level</div>
+                    <span class="badge badge-success" style="font-size: 0.9rem; padding: 8px 12px;">
+                        {{ honors }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Units Completed -->
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card">
+                <div class="stat-value">{{ units_completed }}</div>
+                <div class="stat-label">Units Completed</div>
+            </div>
+        </div>
+
+        <!-- Failed Units -->
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card">
+                <div class="stat-value" style="color: {% if failed_units > 0 %}#dc3545{% else %}#28a745{% endif %};">
+                    {{ failed_units }}
+                </div>
+                <div class="stat-label">Failed Units</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grade Distribution -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Grade Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="gradeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-link"></i> Quick Links</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'academics:transcript' %}" class="btn btn-outline-success w-100 mb-2">
+                        <i class="fas fa-scroll"></i> View Full Transcript
+                    </a>
+                    <a href="{% url 'academics:units' %}" class="btn btn-outline-success w-100 mb-2">
+                        <i class="fas fa-book"></i> View Units
+                    </a>
+                    <a href="{% url 'academics:projection' %}" class="btn btn-outline-success w-100 mb-2">
+                        <i class="fas fa-calculator"></i> GPA Projection
+                    </a>
+                    <a href="{% url 'accounts:profile' %}" class="btn btn-outline-success w-100">
+                        <i class="fas fa-user"></i> Edit Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Overview -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> About Your GPA</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Your Weighted Mean Average (WMA) is calculated using the JKUAT grading standards. 
+                        Each unit's score is multiplied by its credit units, then divided by the total credit units 
+                        to get your overall GPA.
+                    </p>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>🎯 First Class:</strong> 70% and above
+                        </div>
+                        <div class="col-md-3">
+                            <strong>📚 Second Class (Upper):</strong> 60-69%
+                        </div>
+                        <div class="col-md-3">
+                            <strong>📖 Second Class (Lower):</strong> 50-59%
+                        </div>
+                        <div class="col-md-3">
+                            <strong>✓ Pass:</strong> 40-49%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="alert alert-warning">
+        <h4 class="alert-heading">No Student Profile Found</h4>
+        <p>Your user account is not linked to a student profile. Please contact the administrator.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Chart JS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Grade Distribution Chart
+    const gradeData = {
+        'A': {{ grade_distribution.A }},
+        'B': {{ grade_distribution.B }},
+        'C': {{ grade_distribution.C }},
+        'D': {{ grade_distribution.D }},
+        'E': {{ grade_distribution.E }}
+    };
+
+    const ctx = document.getElementById('gradeChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['A', 'B', 'C', 'D', 'E'],
+            datasets: [{
+                data: Object.values(gradeData),
+                backgroundColor: [
+                    '#28a745',
+                    '#007bff',
+                    '#ffc107',
+                    '#fd7e14',
+                    '#dc3545'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

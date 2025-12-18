@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Welcome - JKUAT GPA Calculator{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    {% if user.is_authenticated %}
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="alert alert-success" role="alert">
+                <h4 class="alert-heading">Welcome back, {{ user.first_name }}!</h4>
+                <p>You're logged in to the JKUAT GPA Calculator. Use the navigation menu to access your academic information.</p>
+                <hr>
+                <p class="mb-0">
+                    <a href="{% url 'academics:dashboard' %}" class="btn btn-success">Go to Dashboard</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-md-8 mx-auto text-center">
+            <h1 class="display-3 mb-4" style="color: #4CAF50;">
+                <i class="fas fa-graduation-cap"></i> JKUAT GPA Calculator
+            </h1>
+            <p class="lead text-muted mb-4">
+                Calculate your current GPA, project future grades, and plan for graduation success.
+            </p>
+            <a href="{% url 'accounts:login' %}" class="btn btn-success btn-lg">
+                <i class="fas fa-sign-in-alt"></i> Login with Registration Number
+            </a>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row mt-5 mb-5">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-pie" style="font-size: 2rem; color: #4CAF50;"></i>
+                    <h5 class="card-title mt-3">Calculate GPA</h5>
+                    <p class="card-text">Accurate GPA calculation based on JKUAT grading standards.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-calculator" style="font-size: 2rem; color: #4CAF50;"></i>
+                    <h5 class="card-title mt-3">Project Future Grades</h5>
+                    <p class="card-text">See what grades you need for your target honors level.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-scroll" style="font-size: 2rem; color: #4CAF50;"></i>
+                    <h5 class="card-title mt-3">View Transcript</h5>
+                    <p class="card-text">Complete academic transcript with all grades and credits.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grading Standards -->
+    <div class="row mb-5">
+        <div class="col-md-8 mx-auto">
+            <h3 class="mb-4">JKUAT Grading Standards</h3>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead class="table-success">
+                        <tr>
+                            <th>Grade</th>
+                            <th>Score Range</th>
+                            <th>Honours Level</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="grade-badge grade-a">A</span></td>
+                            <td>70-100%</td>
+                            <td>First Class Honours</td>
+                        </tr>
+                        <tr>
+                            <td><span class="grade-badge grade-b">B</span></td>
+                            <td>60-69%</td>
+                            <td>Second Class Honours (Upper)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="grade-badge grade-c">C</span></td>
+                            <td>50-59%</td>
+                            <td>Second Class Honours (Lower)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="grade-badge grade-d">D</span></td>
+                            <td>40-49%</td>
+                            <td>Pass</td>
+                        </tr>
+                        <tr>
+                            <td><span class="grade-badge grade-e">E</span></td>
+                            <td>0-39%</td>
+                            <td>Fail</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="row mb-5">
+        <div class="col-md-8 mx-auto bg-light p-5 rounded">
+            <h3>Ready to get started?</h3>
+            <p>Log in with your registration number to access your academic dashboard and start tracking your GPA.</p>
+            <a href="{% url 'accounts:login' %}" class="btn btn-success btn-lg">
+                <i class="fas fa-sign-in-alt"></i> Login Now
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

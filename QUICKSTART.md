@@ -35,7 +35,7 @@ Starting development server at http://127.0.0.1:8000/
 
 ### Step 4: Access the Application
 - **Home Page**: http://localhost:8000
-- **Admin Panel**: http://localhost:8000/admin (admin/admin)
+- **Admin Panel**: http://localhost:8000/admin (use superuser credentials)
 - **Student Login**: http://localhost:8000/accounts/login/
 
 ---
@@ -75,7 +75,7 @@ Use any of these to login:
 
 ### 3. Admin Panel
 - URL: http://localhost:8000/admin/
-- Login: `admin` / `admin` (default superuser)
+- Create superuser first: `python manage.py createsuperuser`
 - Features:
   - Manage students
   - Add/edit unit grades
@@ -132,7 +132,26 @@ Project/
 
 ## 🛠️ Common Tasks
 
-### Add a New Student
+### Create Superuser (First-time setup)
+```bash
+python manage.py createsuperuser
+# Follow prompts to create admin account
+# Then login at http://localhost:8000/admin/
+```
+
+### Add a New Student via Admin Panel
+1. Go to http://localhost:8000/admin/
+2. Click "Students" in accounts section
+3. Click "Add Student"
+4. Fill in the form:
+   - Select or create a User first
+   - Enter registration number
+   - Enter course name
+   - Select year of study
+   - Enter academic year
+5. Click Save
+
+### Add a New Student via Shell
 ```bash
 python manage.py shell
 ```
@@ -141,11 +160,16 @@ python manage.py shell
 from accounts.models import Student
 from django.contrib.auth.models import User
 
+# Create a Django user account
 user = User.objects.create_user(
     username='newstudent',
-    password='password123'
+    email='newstudent@jkuat.ac.ke',
+    password='password123',
+    first_name='Jane',
+    last_name='Doe'
 )
 
+# Create the student profile
 student = Student.objects.create(
     user=user,
     registration_number='SCT211-0005/2021',
@@ -154,6 +178,7 @@ student = Student.objects.create(
     academic_year='2024/2025'
 )
 
+print(f"Created: {student.registration_number}")
 exit()
 ```
 

@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}GPA Projection - JKUAT GPA Calculator{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    {% if student %}
+    <h1 class="mb-4">Graduation Planner</h1>
+    
+    <div class="row mb-4">
+        <div class="col-md-8 mx-auto">
+            <div class="alert alert-info">
+                <strong>📊 Current Status:</strong> Your GPA is <strong>{{ current_gpa }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for projection in projections %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header {% if projection.is_achievable %}bg-success{% else %}bg-danger{% endif %} text-white">
+                    <h5 class="mb-0">{{ projection.target_name }}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="lead mb-3">
+                        <strong>Target GPA: {{ projection.target_gpa }}%</strong>
+                    </p>
+
+                    {% if projection.required_average %}
+                    <div class="mb-3">
+                        <small class="text-muted">Required Average</small>
+                        <div style="font-size: 2rem; font-weight: bold; color: {% if projection.is_achievable %}#28a745{% else %}#dc3545{% endif %};">
+                            {{ projection.required_average|floatformat:1 }}%
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <small class="text-muted">Status</small>
+                        <div>
+                            {% if projection.is_achievable %}
+                            <span class="badge bg-success" style="font-size: 0.9rem;">✓ Achievable</span>
+                            {% else %}
+                            <span class="badge bg-danger" style="font-size: 0.9rem;">✗ Not Achievable</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <p class="card-text text-muted">{{ projection.message }}</p>
+                    {% else %}
+                    <p class="text-muted">No remaining units to evaluate.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-8 mx-auto">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-lightbulb"></i> How It Works</h5>
+                    <p class="card-text">
+                        The projection engine calculates the average score you need in your remaining units 
+                        to achieve your target honors level. This is based on your current GPA and the 
+                        JKUAT grading standards.
+                    </p>
+                    <p class="card-text">
+                        <strong>Formula:</strong> Required Average = (Target Points - Current Points) / Remaining Units
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{% url 'academics:dashboard' %}" class="btn btn-success">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+    {% else %}
+    <div class="alert alert-warning">
+        <h4 class="alert-heading">No Student Profile Found</h4>
+        <p>Your account is not linked to a student profile. Please contact the administrator.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

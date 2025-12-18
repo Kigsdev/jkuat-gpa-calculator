@@ -2,6 +2,8 @@ from django.shortcuts import render
 from django.views.generic import TemplateView, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
+from django.contrib import messages
+from django.core.exceptions import ObjectDoesNotExist
 from .models import Result, Student
 from .utils import GradeCalculator
 
@@ -19,12 +21,18 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             grade_dist = GradeCalculator.get_grade_distribution(student)
             
             context['student'] = student
-            context['gpa'] = gpa_data['gpa']
-            context['honors'] = gpa_data['honors_level']
-            context['units_completed'] = gpa_data['units_completed']
-            context['failed_units'] = gpa_data['failed_units']
+            context['gpa'] = f"{gpa_data.get('gpa', 0.00):.2f}"
+            context['honors'] = gpa_data.get('honors_level', 'Pass')
+            context['units_completed'] = gpa_data.get('units_completed', 0)
+            context['failed_units'] = gpa_data.get('failed_units', 0)
             context['grade_distribution'] = grade_dist
-        except Student.DoesNotExist:
+            context['total_points'] = gpa_data.get('total_points', 0)
+            context['total_credit_units'] = gpa_data.get('total_credit_units', 0)
+        except ObjectDoesNotExist:
+            context['error'] = 'Student profile not found. Please contact the registrar.'
+            context['student'] = None
+        except Exception as e:
+            context['error'] = f'Error loading dashboard: {str(e)}'
             context['student'] = None
         
         return context
@@ -44,10 +52,15 @@ class TranscriptView(LoginRequiredMixin, TemplateView):
             
             context['student'] = student
             context['transcript'] = transcript
-            context['gpa'] = gpa_data['gpa']
-            context['total_points'] = gpa_data['total_points']
-            context['total_credit_units'] = gpa_data['total_credit_units']
-        except Student.DoesNotExist:
+            context['gpa'] = f"{gpa_data.get('gpa', 0.00):.2f}"
+            context['total_points'] = gpa_data.get('total_points', 0)
+            context['total_credit_units'] = gpa_data.get('total_credit_units', 0)
+            context['honors_level'] = gpa_data.get('honors_level', 'Pass')
+        except ObjectDoesNotExist:
+            context['error'] = 'Student profile not found. Please contact the registrar.'
+            context['student'] = None
+        except Exception as e:
+            context['error'] = f'Error loading transcript: {str(e)}'
             context['student'] = None
         
         return context
@@ -62,11 +75,21 @@ class UnitsView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         try:
             student = self.request.user.student
-            results = Result.objects.filter(student=student).select_related('unit')
+            results = Result.objects.filter(
+                student=student
+            ).select_related('unit').order_by('unit__code')
+            
             context['student'] = student
             context['results'] = results
-        except Student.DoesNotExist:
+            context['total_units'] = results.count()
+        except ObjectDoesNotExist:
+            context['error'] = 'Student profile not found. Please contact the registrar.'
             context['student'] = None
+            context['results'] = []
+        except Exception as e:
+            context['error'] = f'Error loading units: {str(e)}'
+            context['student'] = None
+            context['results'] = []
         
         return context
 
@@ -81,29 +104,40 @@ class ProjectionView(LoginRequiredMixin, TemplateView):
         try:
             student = self.request.user.student
             gpa_data = GradeCalculator.calculate_wma(student)
+            current_gpa = gpa_data.get('gpa', 0.00)
             
-            # Projection targets
-            targets = [
-                {'name': 'First Class Honours', 'gpa': 70},
-                {'name': 'Second Class (Upper)', 'gpa': 60},
-                {'name': 'Second Class (Lower)', 'gpa': 50},
-            ]
+            # Projection targets for different honor levels
+            targets = {
+                'First Class Honours': 70.0,
+                'Second Class (Upper)': 60.0,
+                'Second Class (Lower)': 50.0,
+                'Pass': 40.0,
+            }
             
-            projections = []
-            for target in targets:
+            projections = {}
+            remaining_units = 8  # Default - can be customized
+            
+            for target_name, target_gpa in targets.items():
                 projection = GradeCalculator.project_required_average(
                     student,
-                    target['gpa'],
-                    remaining_units=8  # Default remaining units - can be customized
+                    target_gpa,
+                    remaining_units=remaining_units
                 )
-                projection['target_name'] = target['name']
-                projections.append(projection)
+                projections[target_name] = projection
             
             context['student'] = student
-            context['current_gpa'] = gpa_data['gpa']
+            context['current_gpa'] = f"{current_gpa:.2f}"
             context['projections'] = projections
-        except Student.DoesNotExist:
+            context['remaining_units'] = remaining_units
+            context['honors_level'] = gpa_data.get('honors_level', 'Pass')
+        except ObjectDoesNotExist:
+            context['error'] = 'Student profile not found. Please contact the registrar.'
             context['student'] = None
+            context['projections'] = {}
+        except Exception as e:
+            context['error'] = f'Error loading projections: {str(e)}'
+            context['student'] = None
+            context['projections'] = {}
         
         return context
 

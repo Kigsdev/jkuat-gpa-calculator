@@ -3,6 +3,7 @@ from django.views import View
 from django.views.generic import ListView, DetailView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
 from django.http import JsonResponse
 from .models import Student
 
@@ -17,8 +18,17 @@ class LoginView(View):
         return render(request, self.template_name, {})
     
     def post(self, request):
-        registration_number = request.POST.get('registration_number')
-        password = request.POST.get('password')
+        registration_number = request.POST.get('registration_number', '').strip()
+        password = request.POST.get('password', '')
+        error = None
+        
+        if not registration_number:
+            error = 'Registration number is required.'
+        elif not password:
+            error = 'Password is required.'
+        
+        if error:
+            return render(request, self.template_name, {'error': error})
         
         try:
             student = Student.objects.get(registration_number=registration_number)
@@ -29,13 +39,16 @@ class LoginView(View):
             )
             if user is not None:
                 login(request, user)
+                messages.success(request, f'Welcome back, {user.first_name}!')
                 return redirect('academics:dashboard')
             else:
-                return render(request, self.template_name, 
-                            {'error': 'Invalid registration number or password.'})
+                error = 'Invalid registration number or password.'
         except Student.DoesNotExist:
-            return render(request, self.template_name,
-                        {'error': 'Student with this registration number not found.'})
+            error = 'Student with this registration number not found.'
+        except Exception as e:
+            error = f'An error occurred: {str(e)}'
+        
+        return render(request, self.template_name, {'error': error})
 
 
 class LogoutView(LoginRequiredMixin, View):
@@ -44,6 +57,7 @@ class LogoutView(LoginRequiredMixin, View):
     
     def get(self, request):
         logout(request)
+        messages.info(request, 'You have been logged out successfully.')
         return redirect('accounts:login')
 
 
@@ -55,7 +69,6 @@ class RegisterView(View):
         return render(request, self.template_name, {})
     
     def post(self, request):
-        # Registration logic to be implemented
         return render(request, self.template_name, {})
 
 

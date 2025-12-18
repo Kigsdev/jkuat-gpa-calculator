@@ -58,44 +58,80 @@ class GradeCalculator:
                 'honors_level': str
             }
         """
-        # Get results for the student
-        if academic_year:
-            results = Result.objects.filter(
-                student=student,
-                unit__academic_year=academic_year
-            ).select_related('unit')
-        else:
-            results = Result.objects.filter(student=student).select_related('unit')
-        
-        if not results.exists():
+        try:
+            # Get results for the student
+            if academic_year:
+                results = Result.objects.filter(
+                    student=student,
+                    unit__academic_year=academic_year
+                ).select_related('unit')
+            else:
+                results = Result.objects.filter(student=student).select_related('unit')
+            
+            if not results.exists():
+                return {
+                    'gpa': 0.00,
+                    'total_points': 0.00,
+                    'total_credit_units': 0,
+                    'units_completed': 0,
+                    'failed_units': 0,
+                    'honors_level': 'No grades recorded yet'
+                }
+            
+            # Calculate totals with validation
+            total_points = Decimal('0.00')
+            total_credit_units = 0
+            failed_count = 0
+            
+            for result in results:
+                # Validate score is in range
+                if result.score is None or result.score < 0 or result.score > 100:
+                    continue
+                    
+                # Points = Score * Credit Units
+                points = Decimal(str(result.score)) * Decimal(result.unit.credit_units)
+                total_points += points
+                total_credit_units += result.unit.credit_units
+                
+                if result.grade == 'E':  # Fail
+                    failed_count += 1
+            
+            # Calculate GPA/WMA: Total weighted points / Total credit units
+            if total_credit_units > 0:
+                gpa = float(round(total_points / Decimal(total_credit_units), 2))
+            else:
+                gpa = 0.00
+            
+            # Determine overall honors level
+            if gpa >= 70:
+                honors = 'First Class Honours'
+            elif gpa >= 60:
+                honors = 'Second Class Honours (Upper Division)'
+            elif gpa >= 50:
+                honors = 'Second Class Honours (Lower Division)'
+            elif gpa >= 40:
+                honors = 'Pass'
+            else:
+                honors = 'Fail'
+            
+            return {
+                'gpa': gpa,
+                'total_points': float(total_points),
+                'total_credit_units': total_credit_units,
+                'units_completed': results.exclude(grade='E').count(),
+                'failed_units': failed_count,
+                'honors_level': honors
+            }
+        except Exception as e:
+            print(f"Error calculating WMA for {student}: {str(e)}")
             return {
                 'gpa': 0.00,
                 'total_points': 0.00,
                 'total_credit_units': 0,
                 'units_completed': 0,
                 'failed_units': 0,
-                'honors_level': 'No data available'
+                'honors_level': f'Error: {str(e)[:50]}'
             }
-        
-        # Calculate totals
-        total_points = Decimal('0.00')
-        total_credit_units = 0
-        failed_count = 0
-        
-        for result in results:
-            # Points = Score * Credit Units
-            points = Decimal(result.score) * Decimal(result.unit.credit_units)
-            total_points += points
-            total_credit_units += result.unit.credit_units
-            
-            if result.grade == 'E':  # Fail
-                failed_count += 1
-        
-        # Calculate GPA/WMA: Total weighted points / Total credit units
-        if total_credit_units > 0:
-            gpa = round(total_points / Decimal(total_credit_units), 2)
-        else:
-            gpa = Decimal('0.00')
         
         # Determine overall honors level
         gpa_float = float(gpa)

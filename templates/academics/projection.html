@@ -16,27 +16,27 @@
     </div>
 
     <div class="row">
-        {% for projection in projections %}
+        {% for target_name, projection in projections.items %}
         <div class="col-md-6 mb-4">
             <div class="card">
                 <div class="card-header {% if projection.is_achievable %}bg-success{% else %}bg-danger{% endif %} text-white">
-                    <h5 class="mb-0">{{ projection.target_name }}</h5>
+                    <h5 class="mb-0">{{ target_name }}</h5>
                 </div>
                 <div class="card-body">
                     <p class="lead mb-3">
-                        <strong>Target GPA: {{ projection.target_gpa }}%</strong>
+                        <strong>Required Average</strong>
                     </p>
 
                     {% if projection.required_average %}
                     <div class="mb-3">
-                        <small class="text-muted">Required Average</small>
-                        <div style="font-size: 2rem; font-weight: bold; color: {% if projection.is_achievable %}#28a745{% else %}#dc3545{% endif %};">
+                        <div style="font-size: 2.5rem; font-weight: bold; color: {% if projection.is_achievable %}#28a745{% else %}#dc3545{% endif %};">
                             {{ projection.required_average|floatformat:1 }}%
                         </div>
+                        <small class="text-muted">in remaining {{ remaining_units }} units</small>
                     </div>
 
                     <div class="mb-3">
-                        <small class="text-muted">Status</small>
+                        <small class="text-muted">Achievability</small>
                         <div>
                             {% if projection.is_achievable %}
                             <span class="badge bg-success" style="font-size: 0.9rem;">✓ Achievable</span>
@@ -48,9 +48,11 @@
 
                     <hr>
 
-                    <p class="card-text text-muted">{{ projection.message }}</p>
+                    <p class="card-text text-muted small">
+                        <i class="fas fa-info-circle"></i> {{ projection.message }}
+                    </p>
                     {% else %}
-                    <p class="text-muted">No remaining units to evaluate.</p>
+                    <p class="text-muted">Unable to calculate projections.</p>
                     {% endif %}
                 </div>
             </div>

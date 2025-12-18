@@ -83,15 +83,15 @@ class GradeCalculator:
         failed_count = 0
         
         for result in results:
-            # Points = (Score * Credit Units) / 100
-            points = Decimal(result.score) * Decimal(result.unit.credit_units) / Decimal('100')
+            # Points = Score * Credit Units
+            points = Decimal(result.score) * Decimal(result.unit.credit_units)
             total_points += points
             total_credit_units += result.unit.credit_units
             
             if result.grade == 'E':  # Fail
                 failed_count += 1
         
-        # Calculate GPA/WMA
+        # Calculate GPA/WMA: Total weighted points / Total credit units
         if total_credit_units > 0:
             gpa = round(total_points / Decimal(total_credit_units), 2)
         else:
@@ -161,15 +161,16 @@ class GradeCalculator:
             }
         
         # Calculate required total points
-        total_units_after = current_credits + remaining_units
-        target_total_points = (target_gpa * total_units_after) / 100
+        total_units_after = current_credits + (remaining_units * 3)  # Assuming avg credit units is 3
+        target_total_points = target_gpa * total_units_after
         
         # Calculate required points from remaining units
         required_points = target_total_points - current_points
         
-        # Calculate required average score
-        if remaining_units > 0:
-            required_average = (required_points / remaining_units) * 100
+        # Calculate required average score (assuming each remaining unit has 3 credit units)
+        remaining_credit_units = remaining_units * 3
+        if remaining_credit_units > 0:
+            required_average = required_points / remaining_credit_units
         else:
             required_average = 0
         

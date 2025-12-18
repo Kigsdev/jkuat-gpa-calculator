@@ -122,8 +122,8 @@ class Result(models.Model):
         else:
             self.grade = 'E'
         
-        # Calculate weighted points
-        self.points = self.score * self.unit.credit_units / 100
+        # Calculate weighted points (score * credit_units)
+        self.points = self.score * self.unit.credit_units
         
         super().save(*args, **kwargs)
 

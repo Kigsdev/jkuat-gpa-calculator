@@ -111,23 +111,25 @@ class Result(models.Model):
     def save(self, *args, **kwargs):
         """Override save to auto-calculate grade and points."""
         # Auto-calculate grade based on score
-        if self.score >= 70:
-            self.grade = 'A'
-        elif self.score >= 60:
-            self.grade = 'B'
-        elif self.score >= 50:
-            self.grade = 'C'
-        elif self.score >= 40:
-            self.grade = 'D'
+        if self.score is not None:
+            if self.score >= 70:
+                self.grade = 'A'
+            elif self.score >= 60:
+                self.grade = 'B'
+            elif self.score >= 50:
+                self.grade = 'C'
+            elif self.score >= 40:
+                self.grade = 'D'
+            else:
+                self.grade = 'E'
+            
+            # Calculate weighted points (score * credit_units)
+            self.points = self.score * self.unit.credit_units
         else:
-            self.grade = 'E'
-        
-        # Calculate weighted points (score * credit_units)
-        self.points = self.score * self.unit.credit_units
+            self.grade = None
+            self.points = 0
         
         super().save(*args, **kwargs)
-
-
 class GPACalculation(models.Model):
     """
     Stores calculated GPA/WMA for a student in a specific academic year.

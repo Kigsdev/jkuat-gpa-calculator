@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}Grade Analytics - JKUAT GPA Calculator{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    {% if student %}
+    <h1 class="mb-4"><i class="fas fa-chart-line"></i> Grade Analytics & Insights</h1>
+    
+    <!-- Alerts Section -->
+    {% if alerts %}
+    <div class="alert-section mb-4">
+        {% for alert in alerts %}
+        <div class="alert alert-{% if alert.type == 'low_grade' %}warning{% elif alert.type == 'honor_approaching' %}info{% else %}primary{% endif %} alert-dismissible fade show">
+            <strong>{{ alert.title }}</strong><br>
+            {{ alert.message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- Main Analytics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="stat-value">{{ analytics.average_score }}%</div>
+                <div class="stat-label">Average Score</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="stat-value">{{ gpa }}</div>
+                <div class="stat-label">Current GPA</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="stat-value">{{ trend_icon }}</div>
+                <div class="stat-label">{{ analytics.gpa_trend|title }} Trend</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card bg-danger text-white">
+                <div class="stat-value">{{ analytics.units_at_risk }}</div>
+                <div class="stat-label">Units at Risk</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Unit Performance -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-star"></i> Best Performing Unit</h5>
+                </div>
+                <div class="card-body">
+                    {% if analytics.best_unit %}
+                    <p class="lead mb-0">{{ analytics.best_unit }}</p>
+                    {% else %}
+                    <p class="text-muted">No data available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Worst Performing Unit</h5>
+                </div>
+                <div class="card-body">
+                    {% if analytics.worst_unit %}
+                    <p class="lead mb-0">{{ analytics.worst_unit }}</p>
+                    {% else %}
+                    <p class="text-muted">No data available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Struggling Units -->
+    {% if analytics.struggling_units %}
+    <div class="card mb-4">
+        <div class="card-header bg-warning">
+            <h5 class="mb-0"><i class="fas fa-flag"></i> Units Below 50% (At Risk)</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for unit in analytics.struggling_units %}
+                <div class="col-md-6 mb-3">
+                    <div class="card border-warning">
+                        <div class="card-body">
+                            <h6 class="card-title">{{ unit.code }}</h6>
+                            <p class="card-text text-muted">{{ unit.name }}</p>
+                            <div class="progress">
+                                <div class="progress-bar bg-warning" role="progressbar" 
+                                     style="width: {{ unit.score }}%" 
+                                     aria-valuenow="{{ unit.score }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    {{ unit.score }}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="alert alert-info mt-3">
+                <strong>💡 Recommendation:</strong> Consider seeking help for these units. Visit your instructor during office hours or form a study group.
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Trend Analysis -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Performance Insights</h5>
+        </div>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                    <strong>Total Units:</strong> {{ analytics.total_units }}
+                </li>
+                <li class="list-group-item">
+                    <strong>Average Score:</strong> {{ analytics.average_score }}%
+                </li>
+                <li class="list-group-item">
+                    <strong>Performance Trend:</strong> 
+                    {% if analytics.gpa_trend == 'improving' %}
+                    <span class="badge bg-success">📈 Improving</span> - Great work! Keep it up!
+                    {% elif analytics.gpa_trend == 'declining' %}
+                    <span class="badge bg-danger">📉 Declining</span> - Consider reviewing your study approach
+                    {% else %}
+                    <span class="badge bg-secondary">➡️ Stable</span> - Consistent performance
+                    {% endif %}
+                </li>
+                <li class="list-group-item">
+                    <strong>Units at Risk:</strong> {{ analytics.units_at_risk }} unit(s) with scores below 60%
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <a href="{% url 'academics:transcript' %}" class="btn btn-primary w-100">
+                <i class="fas fa-file-alt"></i> View Full Transcript
+            </a>
+        </div>
+        <div class="col-md-6">
+            <a href="{% url 'academics:notification_settings' %}" class="btn btn-secondary w-100">
+                <i class="fas fa-bell"></i> Notification Preferences
+            </a>
+        </div>
+    </div>
+    
+    {% else %}
+    <div class="alert alert-danger">
+        {{ error }}
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .stat-card {
+        text-align: center;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+    }
+    
+    .stat-card.bg-danger {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+</style>
+{% endblock %}

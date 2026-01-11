@@ -82,6 +82,42 @@ Use any of these to login:
   - View academic years
   - GPA tracking
 
+### 4. Phase 5 Advanced Features
+
+#### 📊 Grade Analytics
+- URL: http://localhost:8000/academics/analytics/
+- View detailed grade analysis and performance insights
+- See best/worst performing units
+- Identify units at risk (score < 50%)
+- Track GPA trend (improving, stable, declining)
+- Get personalized recommendations
+
+#### 📥 PDF Exports
+- **Transcript Export**: Download full academic transcript as PDF
+  - Click "Export Transcript" button on transcript page
+  - Includes all courses, grades, GPA, and honors level
+  
+- **Graduation Plan Export**: Download graduation plan as PDF
+  - Click "Export Plan" button on projection page
+  - Shows target GPAs and achievability
+
+#### 🔔 Alerts & Notifications
+- URL: http://localhost:8000/academics/alerts/
+- Receive alerts for:
+  - GPA changes
+  - Honor level thresholds (within 2 points)
+  - Low grades (below 50%)
+  - Units at risk detection
+- Configure notification preferences: http://localhost:8000/academics/notifications/settings/
+
+#### 📈 Insights Available
+- Average grade score across all units
+- Best and worst performing courses
+- Struggling units with low scores
+- Performance trend analysis
+- Units at risk counter
+- GPA trajectory and recommendations
+
 ---
 
 ## 📊 Project Structure
@@ -291,10 +327,12 @@ For issues or help:
 - [x] Complete Projection page ✅
 - [x] Complete Profile page ✅
 
-### Phase 5 (Advanced Features)
-- [ ] Graduation planner UI
-- [ ] PDF transcript export
-- [ ] AI recommendations
+### Phase 5 (Advanced Features) ✅ COMPLETE
+- [x] PDF Transcript Export ✅
+- [x] PDF Graduation Plan Export ✅
+- [x] Grade Analytics & Insights ✅
+- [x] GPA Alerts & Notifications ✅
+- [x] Notification Preferences ✅
 
 ### Phase 6 (Production)
 - [ ] Unit tests

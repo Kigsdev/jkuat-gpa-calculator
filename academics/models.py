@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils import timezone
 from accounts.models import Student
 
 
@@ -167,4 +168,90 @@ class GPACalculation(models.Model):
     
     def __str__(self):
         return f"{self.student} - {self.academic_year}: {self.gpa}"
+
+
+class NotificationPreference(models.Model):
+    """
+    Stores student notification preferences for Phase 5 alerts.
+    """
+    NOTIFICATION_TYPES = [
+        ('gpa_change', 'GPA Changes'),
+        ('honor_threshold', 'Honor Level Threshold (within 2 points)'),
+        ('low_grade', 'Grades Below Target'),
+        ('all', 'All Notifications'),
+    ]
+    
+    student = models.OneToOneField(
+        Student,
+        on_delete=models.CASCADE,
+        related_name='notification_preference'
+    )
+    enabled_notifications = models.CharField(
+        max_length=50,
+        choices=NOTIFICATION_TYPES,
+        default='all'
+    )
+    email_on_alerts = models.BooleanField(default=True)
+    dashboard_alerts = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.student} - Notifications"
+
+
+class GradeAlert(models.Model):
+    """
+    Stores alerts/notifications for students about GPA changes, thresholds, etc.
+    """
+    ALERT_TYPES = [
+        ('gpa_increase', 'GPA Increased'),
+        ('gpa_decrease', 'GPA Decreased'),
+        ('honor_approaching', 'Approaching Honor Level'),
+        ('low_grade', 'Low Grade Alert'),
+    ]
+    
+    student = models.ForeignKey(
+        Student,
+        on_delete=models.CASCADE,
+        related_name='grade_alerts'
+    )
+    alert_type = models.CharField(max_length=20, choices=ALERT_TYPES)
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.student} - {self.alert_type}"
+
+
+class GradeAnalytics(models.Model):
+    """
+    Stores grade analysis and trends for Phase 5 insights.
+    """
+    student = models.OneToOneField(
+        Student,
+        on_delete=models.CASCADE,
+        related_name='grade_analytics'
+    )
+    average_grade_score = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0.00,
+        help_text="Average score across all units"
+    )
+    best_performing_unit = models.CharField(max_length=50, blank=True)
+    worst_performing_unit = models.CharField(max_length=50, blank=True)
+    struggling_units = models.TextField(blank=True, help_text="JSON array of struggling units")
+    gpa_trend = models.CharField(max_length=20, blank=True, help_text="'improving', 'stable', 'declining'")
+    units_at_risk = models.IntegerField(default=0, help_text="Number of units with grades below C")
+    last_calculated = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.student} - Analytics"
+
 

@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Notification Settings - JKUAT GPA Calculator{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    {% if student %}
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <h1 class="mb-4"><i class="fas fa-bell"></i> Notification Preferences</h1>
+            
+            <form method="post" class="card shadow">
+                {% csrf_token %}
+                
+                <div class="card-body">
+                    <h5 class="mb-4">What alerts would you like to receive?</h5>
+                    
+                    <div class="mb-4">
+                        {% for value, label in notification_types %}
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" name="notifications" 
+                                   id="notif_{{ value }}" value="{{ value }}"
+                                   {% if preferences.enabled_notifications == value %}checked{% endif %}>
+                            <label class="form-check-label" for="notif_{{ value }}">
+                                <strong>{{ label }}</strong>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <hr>
+                    
+                    <h5 class="mb-4">Delivery Preferences</h5>
+                    
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="email_alerts" 
+                               id="email_alerts" {% if preferences.email_on_alerts %}checked{% endif %}>
+                        <label class="form-check-label" for="email_alerts">
+                            <strong>Send alerts via email</strong>
+                            <small class="text-muted d-block">Get notifications sent to {{ student.user.email }}</small>
+                        </label>
+                    </div>
+                    
+                    <div class="form-check form-switch mb-4">
+                        <input class="form-check-input" type="checkbox" name="dashboard_alerts" 
+                               id="dashboard_alerts" {% if preferences.dashboard_alerts %}checked{% endif %}>
+                        <label class="form-check-label" for="dashboard_alerts">
+                            <strong>Show alerts on dashboard</strong>
+                            <small class="text-muted d-block">Display notifications when you log in</small>
+                        </label>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="alert alert-info">
+                        <strong>📧 Alert Types:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li><strong>GPA Changes:</strong> Notified when your GPA changes</li>
+                            <li><strong>Honor Level Threshold:</strong> Alerted when within 2 points of next honor level</li>
+                            <li><strong>Low Grades:</strong> Notified when a grade falls below your target</li>
+                            <li><strong>All Notifications:</strong> Receive all types of notifications</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-light">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> Save Preferences
+                    </button>
+                    <a href="{% url 'academics:dashboard' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+            </form>
+            
+            <hr class="my-4">
+            
+            <!-- View Alerts -->
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-history"></i> Recent Alerts</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'academics:alerts' %}" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-list"></i> View All Alerts
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% else %}
+    <div class="alert alert-danger">
+        {{ error }}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

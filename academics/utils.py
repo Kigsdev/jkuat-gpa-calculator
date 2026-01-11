@@ -285,3 +285,242 @@ class GradeCalculator:
             })
         
         return transcript
+
+
+class PDFGenerator:
+    """
+    Utility class for generating PDF transcripts and documents.
+    Uses reportlab for PDF generation.
+    """
+    
+    @staticmethod
+    def generate_transcript_pdf(student: Student, gpa_data: Dict) -> bytes:
+        """
+        Generate academic transcript as PDF.
+        
+        Args:
+            student: Student instance
+            gpa_data: GPA calculation data from GradeCalculator
+            
+        Returns:
+            PDF bytes for download
+        """
+        from reportlab.lib.pagesizes import letter
+        from reportlab.lib import colors
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+        from io import BytesIO
+        
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*72, bottomMargin=0.5*72)
+        elements = []
+        styles = getSampleStyleSheet()
+        
+        # Title
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=18,
+            textColor=colors.HexColor('#4CAF50'),
+            spaceAfter=12,
+            alignment=1  # Center
+        )
+        elements.append(Paragraph("ACADEMIC TRANSCRIPT", title_style))
+        elements.append(Paragraph("JKUAT GPA Calculator", styles['Normal']))
+        elements.append(Spacer(1, 12))
+        
+        # Student Info Section
+        student_info = [
+            ['Registration Number:', student.registration_number],
+            ['Name:', student.user.get_full_name()],
+            ['Email:', student.user.email],
+            ['Course:', student.course],
+            ['Year of Study:', str(student.year_of_study)],
+        ]
+        student_table = Table(student_info, colWidths=[2*72, 4*72])
+        student_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#E8F5E9')),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+        ]))
+        elements.append(student_table)
+        elements.append(Spacer(1, 12))
+        
+        # GPA Summary Section
+        gpa_summary = [
+            ['GPA', 'Honors Level', 'Units Completed', 'Total Points'],
+            [
+                f"{gpa_data.get('gpa', 0):.2f}",
+                gpa_data.get('honors_level', 'Pass'),
+                str(gpa_data.get('units_completed', 0)),
+                f"{gpa_data.get('total_points', 0):.1f}"
+            ]
+        ]
+        gpa_table = Table(gpa_summary, colWidths=[1.5*72, 2*72, 1.5*72, 1.5*72])
+        gpa_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4CAF50')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#F5F5F5')),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        elements.append(gpa_table)
+        elements.append(Spacer(1, 20))
+        
+        # Courses/Units Section
+        transcript = GradeCalculator.get_transcript(student)
+        if transcript:
+            elements.append(Paragraph("COURSE DETAILS", title_style))
+            elements.append(Spacer(1, 8))
+            
+            course_data = [['Code', 'Unit Name', 'Credits', 'Score', 'Grade', 'Points']]
+            for item in transcript:
+                course_data.append([
+                    item['code'],
+                    item['name'][:30],
+                    str(item['credit_units']),
+                    f"{item['score']}%",
+                    item['grade'],
+                    f"{item['points']:.1f}"
+                ])
+            
+            course_table = Table(course_data, colWidths=[0.8*72, 2.2*72, 0.7*72, 0.7*72, 0.6*72, 0.8*72])
+            course_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4CAF50')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F9F9F9')]),
+            ]))
+            elements.append(course_table)
+        
+        elements.append(Spacer(1, 20))
+        elements.append(Paragraph("Report Generated: " + str(timezone.now().strftime('%Y-%m-%d %H:%M:%S')), styles['Normal']))
+        
+        doc.build(elements)
+        buffer.seek(0)
+        return buffer.getvalue()
+
+
+class AnalyticsCalculator:
+    """
+    Utility class for calculating grade analytics and trends for Phase 5.
+    """
+    
+    @staticmethod
+    def calculate_analytics(student: Student) -> Dict:
+        """
+        Calculate comprehensive grade analytics for a student.
+        
+        Args:
+            student: Student instance
+            
+        Returns:
+            Dictionary with analytics data
+        """
+        from django.db.models import Avg, Q
+        
+        results = Result.objects.filter(student=student).select_related('unit')
+        
+        if not results.exists():
+            return {
+                'average_score': 0,
+                'best_unit': None,
+                'worst_unit': None,
+                'struggling_units': [],
+                'units_at_risk': 0,
+                'gpa_trend': 'stable'
+            }
+        
+        # Average grade score
+        avg_score = results.aggregate(Avg('score'))['score__avg'] or 0
+        
+        # Best and worst units
+        best_result = results.order_by('-score').first()
+        worst_result = results.order_by('score').first()
+        
+        # Struggling units (grades below C - score < 50)
+        struggling = results.filter(score__lt=50)
+        struggling_list = [{'code': r.unit.code, 'name': r.unit.name, 'score': r.score} for r in struggling]
+        
+        # Units at risk (score < 60)
+        units_at_risk = results.filter(score__lt=60).count()
+        
+        # Trend calculation (comparing recent vs earlier grades)
+        all_results = list(results.order_by('created_at'))
+        if len(all_results) > 2:
+            recent_avg = sum([r.score for r in all_results[-3:]]) / min(3, len(all_results[-3:]))
+            earlier_avg = sum([r.score for r in all_results[:3]]) / min(3, len(all_results[:3]))
+            
+            if recent_avg > earlier_avg + 5:
+                trend = 'improving'
+            elif recent_avg < earlier_avg - 5:
+                trend = 'declining'
+            else:
+                trend = 'stable'
+        else:
+            trend = 'stable'
+        
+        return {
+            'average_score': round(avg_score, 2),
+            'best_unit': f"{best_result.unit.code} ({best_result.score}%)" if best_result else None,
+            'worst_unit': f"{worst_result.unit.code} ({worst_result.score}%)" if worst_result else None,
+            'struggling_units': struggling_list,
+            'units_at_risk': units_at_risk,
+            'gpa_trend': trend,
+            'total_units': results.count()
+        }
+    
+    @staticmethod
+    def check_grade_alerts(student: Student, gpa_data: Dict) -> List[Dict]:
+        """
+        Check for alert conditions and generate alerts.
+        
+        Args:
+            student: Student instance
+            gpa_data: GPA calculation data
+            
+        Returns:
+            List of alert dictionaries
+        """
+        alerts = []
+        
+        # Check for low grades
+        low_grades = Result.objects.filter(student=student, score__lt=50).count()
+        if low_grades > 0:
+            alerts.append({
+                'type': 'low_grade',
+                'title': 'Low Grades Alert',
+                'message': f'You have {low_grades} unit(s) with grades below 50%. Consider reviewing these units.'
+            })
+        
+        # Check for honor level thresholds
+        current_gpa = gpa_data.get('gpa', 0)
+        if 68 <= current_gpa < 70:
+            alerts.append({
+                'type': 'honor_approaching',
+                'title': 'First Class Honours Within Reach',
+                'message': f'You are {70 - current_gpa:.2f} points away from First Class Honours!'
+            })
+        elif 58 <= current_gpa < 60:
+            alerts.append({
+                'type': 'honor_approaching',
+                'title': 'Second Class (Upper) Within Reach',
+                'message': f'You are {60 - current_gpa:.2f} points away from Second Class (Upper) Division!'
+            })
+        
+        return alerts
+
+
+from django.utils import timezone

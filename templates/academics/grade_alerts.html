@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Grade Alerts - JKUAT GPA Calculator{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    {% if student %}
+    <h1 class="mb-4"><i class="fas fa-bell"></i> Grade Alerts</h1>
+    
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list"></i> Your Alerts
+                        {% if unread_count > 0 %}
+                        <span class="badge bg-danger">{{ unread_count }} Unread</span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if alerts %}
+                    {% for alert in alerts %}
+                    <div class="alert alert-{% if alert.alert_type == 'low_grade' %}warning{% elif alert.alert_type == 'honor_approaching' %}info{% elif alert.alert_type == 'gpa_increase' %}success{% else %}primary{% endif %} {% if not alert.is_read %}alert-unread{% endif %}" style="{% if not alert.is_read %}background-color: #fffbea; border-left: 4px solid #ffc107;{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="alert-heading">{{ alert.title }}</h6>
+                                <p class="mb-2">{{ alert.message }}</p>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar"></i> {{ alert.created_at|date:"M d, Y H:i" }}
+                                </small>
+                            </div>
+                            {% if not alert.is_read %}
+                            <button class="btn btn-sm btn-outline-secondary mark-read-btn" data-alert-id="{{ alert.id }}">
+                                Mark as Read
+                            </button>
+                            {% else %}
+                            <span class="badge bg-secondary">Read</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    <!-- Pagination -->
+                    {% if is_paginated %}
+                    <nav>
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                            </li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                            </li>
+                            
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> No alerts at this time. Keep up the great work!
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">Alert Statistics</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2"><strong>Total Alerts:</strong> {{ paginator.count }}</p>
+                    <p class="mb-2"><strong>Unread:</strong> <span class="badge bg-danger">{{ unread_count }}</span></p>
+                    <p class="mb-0"><strong>Read:</strong> {{ paginator.count|add:unread_count|add:0 }}</p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'academics:notification_settings' %}" class="btn btn-outline-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-cog"></i> Notification Settings
+                    </a>
+                    <a href="{% url 'academics:analytics' %}" class="btn btn-outline-success btn-sm w-100 mb-2">
+                        <i class="fas fa-chart-line"></i> View Analytics
+                    </a>
+                    <a href="{% url 'academics:dashboard' %}" class="btn btn-outline-secondary btn-sm w-100">
+                        <i class="fas fa-arrow-left"></i> Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% else %}
+    <div class="alert alert-danger">
+        {{ error }}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.querySelectorAll('.mark-read-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const alertId = this.dataset.alertId;
+        fetch(`{% url 'academics:mark_alert_read' alert_id=0 %}`.replace('0', alertId), {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            }
+        });
+    });
+});
+</script>
+
+<style>
+.alert-unread {
+    border-left: 4px solid #ffc107 !important;
+}
+</style>
+{% endblock %}

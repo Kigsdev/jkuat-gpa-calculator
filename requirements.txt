@@ -17,3 +17,7 @@ sentry-sdk==1.38.0
 # Development/Testing
 coverage==7.3.0
 flake8==6.1.0
+
+dj-database-url
+psycopg2-binary
+python-decouple

@@ -1,0 +1,16 @@
+{% extends "admin/base.html" %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <style>
+        /* Hide the theme toggle that's causing the error */
+        .theme-toggle {
+            display: none !important;
+        }
+        
+        /* Alternative: if the toggle has a different selector, hide it here */
+        [aria-label="Dark mode"] {
+            display: none !important;
+        }
+    </style>
+{% endblock %}

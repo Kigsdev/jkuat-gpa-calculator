@@ -219,3 +219,9 @@ X_FRAME_OPTIONS = 'DENY'
 # ============================================================================
 PASSWORD_RESET_TIMEOUT = 3600  # 1 hour
 
+# ============================================================================
+# DJANGO ADMIN CONFIGURATION
+# ============================================================================
+# Disable dark mode theme toggle to fix rendering issue
+ADMIN_URL_PREFIX = 'admin/'
+

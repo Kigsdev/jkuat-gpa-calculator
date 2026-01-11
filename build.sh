@@ -42,24 +42,13 @@ if [ -z "$DJANGO_SUPERUSER_USERNAME" ] || [ -z "$DJANGO_SUPERUSER_PASSWORD" ] ||
     echo ""
     echo "  Alternatively, register via /accounts/register/ after deployment."
 else
-    echo "Superuser credentials found. Attempting to create superuser..."
+    echo "Superuser credentials found. Creating superuser..."
     
-    # Create superuser if it doesn't exist (idempotent)
-    python manage.py shell << END
-import os
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
-username = os.environ.get('DJANGO_SUPERUSER_USERNAME')
-email = os.environ.get('DJANGO_SUPERUSER_EMAIL')
-password = os.environ.get('DJANGO_SUPERUSER_PASSWORD')
-
-if not User.objects.filter(username=username).exists():
-    User.objects.create_superuser(username=username, email=email, password=password)
-    print(f"✓ Superuser '{username}' created successfully")
-else:
-    print(f"ℹ Superuser '{username}' already exists. Skipping creation.")
-END
+    # Use management command for reliable superuser creation
+    python manage.py create_admin \
+        --username "$DJANGO_SUPERUSER_USERNAME" \
+        --password "$DJANGO_SUPERUSER_PASSWORD" \
+        --email "$DJANGO_SUPERUSER_EMAIL"
 fi
 
 echo ""

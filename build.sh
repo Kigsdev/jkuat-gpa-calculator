@@ -10,28 +10,60 @@ echo "=========================================="
 echo "JKUAT GPA Calculator - Build Script"
 echo "=========================================="
 
+# Pre-flight check: Verify DATABASE_URL is set
+echo ""
+echo "[0/5] Checking environment configuration..."
+if [ -z "$DATABASE_URL" ]; then
+    echo "❌ ERROR: DATABASE_URL is not set!"
+    echo "   Add DATABASE_URL to Render environment variables"
+    echo "   Use Internal Database URL from PostgreSQL resource"
+    exit 1
+else
+    echo "✓ DATABASE_URL is configured"
+fi
+
+if [ -z "$SECRET_KEY" ]; then
+    echo "❌ ERROR: SECRET_KEY is not set!"
+    exit 1
+else
+    echo "✓ SECRET_KEY is configured"
+fi
+
+if [ -z "$ALLOWED_HOSTS" ]; then
+    echo "⚠ WARNING: ALLOWED_HOSTS not set, using defaults"
+else
+    echo "✓ ALLOWED_HOSTS is configured"
 # Step 1: Install Python Dependencies
 echo ""
-echo "[1/4] Installing Python dependencies..."
+echo "[1/5] Installing Python dependencies..."
 pip install --upgrade pip
 pip install -r requirements.txt
 echo "✓ Dependencies installed successfully"
 
 # Step 2: Collect Static Files
 echo ""
-echo "[2/4] Collecting static files..."
+echo "[2/5] Collecting static files..."
 python manage.py collectstatic --noinput --clear
 echo "✓ Static files collected successfully"
 
 # Step 3: Run Database Migrations
 echo ""
-echo "[3/4] Running database migrations..."
+echo "[3/5] Running database migrations..."
 python manage.py migrate --noinput
 echo "✓ Database migrations completed successfully"
 
-# Step 4: Create Superuser (if credentials provided)
+# Step 4: Verify Database Connection
 echo ""
-echo "[4/4] Checking for superuser credentials..."
+echo "[4/5] Verifying database connection..."
+python manage.py dbshell << END
+SELECT 'Database connection successful!' as status;
+\q
+END
+echo "✓ Database connection verified"
+
+# Step 5: Create Superuser (if credentials provided)
+echo ""
+echo "[5/5] Checking for superuser credentials..."
 
 if [ -z "$DJANGO_SUPERUSER_USERNAME" ] || [ -z "$DJANGO_SUPERUSER_PASSWORD" ] || [ -z "$DJANGO_SUPERUSER_EMAIL" ]; then
     echo "⚠ Superuser environment variables not found."

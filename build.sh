@@ -33,6 +33,8 @@ if [ -z "$ALLOWED_HOSTS" ]; then
     echo "⚠ WARNING: ALLOWED_HOSTS not set, using defaults"
 else
     echo "✓ ALLOWED_HOSTS is configured"
+fi
+
 # Step 1: Install Python Dependencies
 echo ""
 echo "[1/5] Installing Python dependencies..."
